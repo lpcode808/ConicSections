@@ -1,12 +1,40 @@
 # Conic Sections Explorable Explanations
 
-Static multi-page conic sections interactives for classroom projection and student self-study.
+## Live Site
 
-## Quick Start
+- **Open the interactive site:** [https://lpcode808.github.io/ConicSections/](https://lpcode808.github.io/ConicSections/)
+
+## For Teachers
+
+This project is a classroom-ready set of interactive conic sections explorations designed for:
+
+- teacher-led projection demos
+- student self-paced exploration
+- quick assignment of specific pages (each module stands alone)
+
+### What students can explore
+
+- Ellipse reflection (focus-to-focus ray behavior)
+- Ellipse construction (string-and-pins model)
+- Eccentricity (circle to elongated ellipse)
+- Parabola reflection (parallel rays and focus)
+- Hyperbola reflection (divergent sibling behavior)
+- Unified conic family view (eccentricity as unifier)
+
+### How this was made
+
+- Built from a PRD + architecture plan into a full static GitHub Pages site.
+- Implemented as modular vanilla HTML/CSS/JS pages (no heavy framework required).
+- Added debugging and regression testing to keep it reliable for classroom use.
+- Added teacher-facing explanation blocks and prompts across pages.
+
+## Technical Notes (For Developers)
+
+### Local Dev
 
 Do not open pages with `file://`.
 
-Run an HTTP server from project root:
+Use:
 
 ```bash
 npm install
@@ -16,7 +44,7 @@ npm run dev
 
 Then open [http://127.0.0.1:4173](http://127.0.0.1:4173).
 
-## Project Structure
+### Structure
 
 - `index.html` landing page
 - `shared/conic-math.js` math + geometry logic
@@ -31,43 +59,24 @@ Then open [http://127.0.0.1:4173](http://127.0.0.1:4173).
 - `05-hyperbola-reflection/index.html` + `05-hyperbola-reflection/app.js`
 - `06-conic-family/index.html` + `06-conic-family/app.js`
 
-## Logging and Debugging
+### Logging + Debugging
 
 - Add `?debug=1` to any page for verbose logs.
-- Every page mounts a Debug Panel with:
-  - state snapshot logging
-  - debug query toggle
-  - telemetry download
-  - telemetry clear
-- Telemetry is persisted in localStorage key: `conic:telemetry:v1`.
-- Global handlers capture window errors, unhandled rejections, and throttled interaction events.
+- Each page includes a debug panel (snapshot/toggle/download/clear).
+- Persistent telemetry key: `conic:telemetry:v1`.
 
-## UX Test Suite (Playwright)
+### UX Tests
 
-Run all UX regressions:
+Run:
 
 ```bash
 npm run test:ux
 ```
 
-Coverage includes:
-- cross-page load sanity
-- no module/CORS issues over HTTP
-- key interactions + URL state sync
-- debug panel behavior
-- mobile viewport checks
-- `file://` regression warning behavior
+### Deployment
 
-## GitHub Pages Deployment
+- GitHub Pages workflow: `.github/workflows/deploy.yml`
+- UX workflow: `.github/workflows/ux-tests.yml`
+- Pages source should be set to **GitHub Actions**
 
-- Deployment workflow: `.github/workflows/deploy.yml`
-- UX gate workflow: `.github/workflows/ux-tests.yml`
-
-Set repo Pages source to **GitHub Actions**.
-
-## Launch To GitHub Repo
-
-Target repo:
-- [lpcode808/ConicSections](https://github.com/lpcode808/ConicSections)
-
-See `docs/github-launch.md` for exact push commands.
+Target repo: [https://github.com/lpcode808/ConicSections](https://github.com/lpcode808/ConicSections)
