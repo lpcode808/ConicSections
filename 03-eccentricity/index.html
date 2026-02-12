@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>03 - Eccentricity</title>
+    <link rel="stylesheet" href="../shared/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="site-header">
+        <strong>03. Eccentricity Ladder</strong>
+        <nav>
+          <a href="../02-ellipse-construction/index.html">Prev</a>
+          <a href="../04-parabola-reflection/index.html">Next</a>
+        </nav>
+      </header>
+
+      <section class="hero card">
+        <h1>From Circle to Needle</h1>
+        <p>
+          Eccentricity <strong>e</strong> measures how stretched an ellipse is. Keep <strong>a</strong> fixed and vary
+          <strong>e = c/a</strong>.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="canvas-wrap"><canvas id="scene"></canvas></div>
+        </article>
+        <aside class="card controls">
+          <div class="control-row">
+            <label for="eRange">Eccentricity e</label>
+            <input id="eRange" type="range" min="0" max="0.99" step="0.01" />
+            <output id="eOut" class="pill"></output>
+          </div>
+          <div class="control-row">
+            <label for="thetaRange">Ray angle</label>
+            <input id="thetaRange" type="range" min="0" max="6.283" step="0.001" />
+            <output id="thetaOut" class="pill"></output>
+          </div>
+          <div>
+            <button id="resetBtn" type="button">Reset Defaults</button>
+          </div>
+          <p class="kpi" id="dims"></p>
+          <p class="kpi" id="paths"></p>
+          <ul>
+            <li>Earth orbit: e ~ 0.017</li>
+            <li>Pluto orbit: e ~ 0.25</li>
+            <li>Halley comet: e ~ 0.97</li>
+          </ul>
+          <div id="debugHost"></div>
+        </aside>
+      </section>
+
+      <section class="card spaced">
+        <h2>Teaching Notes</h2>
+        <div class="teach-grid">
+          <article class="teach-card">
+            <h3>Core Idea</h3>
+            <p>Eccentricity controls conic shape while preserving the reflection property for ellipses.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Try This</h3>
+            <p>At e=0, compare to a circle. Then move to e=0.9 and describe how the focal points move.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Teacher Prompt</h3>
+            <p>“If e increases, which of a, b, c changes most visibly on-screen?”</p>
+          </article>
+          <article class="teach-card">
+            <h3>Vocabulary</h3>
+            <ul>
+              <li><strong>Eccentricity:</strong> stretch parameter, e=c/a.</li>
+              <li><strong>Circle:</strong> special ellipse with e=0.</li>
+              <li><strong>Elongated ellipse:</strong> e close to 1.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <script src="../shared/bootstrap.js" data-module="./app.js"></script>
+  </body>
+</html>

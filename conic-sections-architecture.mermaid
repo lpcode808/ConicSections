@@ -1,0 +1,63 @@
+graph TD
+    subgraph "SHARED FOUNDATION"
+        CM["conic-math.js<br/>Ellipse → Parabola → Hyperbola<br/>Unified polar conic function"]
+        DU["draw-utils.js<br/>Canvas ray tracing<br/>SVG construction diagrams"]
+        INT["interaction.js<br/>Drag, Slider, Hover<br/>Pointer events (touch+mouse)"]
+        CSS["styles.css<br/>Typography, Layout<br/>Dark/Light mode"]
+    end
+
+    subgraph "PHASE 1 — Week 1-2 (Ship First)"
+        P1["🎯 P1: Ellipse Reflection<br/>━━━━━━━━━━━━━<br/>• Single ray drag<br/>• Multi-ray burst<br/>• Equal angles proof<br/>• Teacher present mode<br/><br/>MATCHES PHYSICAL DEMO"]
+    end
+
+    subgraph "PHASE 2 — Week 3"
+        P2["P2: Ellipse Construction<br/>━━━━━━━━━━━━━<br/>• String-and-pins builder<br/>• Definition ↔ Equation<br/>• Connection to demo"]
+        P3["P3: Eccentricity<br/>━━━━━━━━━━━━━<br/>• e slider: circle → needle<br/>• Reflection at different e<br/>• Real-world orbits"]
+        LP["Landing Page<br/>Navigation hub"]
+    end
+
+    subgraph "PHASE 3 — Week 4-5"
+        P4["P4: Parabola Reflection<br/>━━━━━━━━━━━━━<br/>• Parallel rays → focus<br/>• Focus → parallel rays<br/>• Ellipse→Parabola morph"]
+        P5["P5: Hyperbola Reflection<br/>━━━━━━━━━━━━━<br/>• Divergent reflection<br/>• Cassegrain telescope<br/>• e > 1 transition"]
+    end
+
+    subgraph "PHASE 4 — Week 6 (Capstone)"
+        P6["P6: Conic Family<br/>━━━━━━━━━━━━━<br/>• 3D cone slicer<br/>• Unified e slider<br/>• Focus-directrix view"]
+    end
+
+    CM --> P1
+    DU --> P1
+    INT --> P1
+    CSS --> P1
+
+    P1 -->|"Student asks:<br/>What IS an ellipse?"| P2
+    P2 -->|"What if I change<br/>the shape?"| P3
+    P3 -->|"What about<br/>other curves?"| P4
+    P4 --> P5
+    P5 --> P6
+    P3 -->|"Eccentricity as<br/>unifying concept"| P6
+
+    CM --> P2
+    CM --> P3
+    CM --> P4
+    CM --> P5
+    CM --> P6
+
+    LP --> P1
+    LP --> P2
+    LP --> P3
+    LP --> P4
+    LP --> P5
+    LP --> P6
+
+    style P1 fill:#2d5016,stroke:#4a8c2a,stroke-width:3px,color:#fff
+    style P2 fill:#1a3a5c,stroke:#2a6a9c,color:#fff
+    style P3 fill:#1a3a5c,stroke:#2a6a9c,color:#fff
+    style P4 fill:#5c3a1a,stroke:#9c6a2a,color:#fff
+    style P5 fill:#5c3a1a,stroke:#9c6a2a,color:#fff
+    style P6 fill:#4a1a5c,stroke:#7a2a9c,color:#fff
+    style LP fill:#333,stroke:#666,color:#fff
+    style CM fill:#0a0a2e,stroke:#3a3a8e,color:#fff
+    style DU fill:#0a0a2e,stroke:#3a3a8e,color:#fff
+    style INT fill:#0a0a2e,stroke:#3a3a8e,color:#fff
+    style CSS fill:#0a0a2e,stroke:#3a3a8e,color:#fff

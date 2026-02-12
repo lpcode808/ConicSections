@@ -1,0 +1,15 @@
+{
+  "name": "conic-sections-explorables",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Explorable conic sections pages with UX regression tests",
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs --port 4173",
+    "test:ux": "playwright test",
+    "test:ux:headed": "playwright test --headed",
+    "test:ux:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

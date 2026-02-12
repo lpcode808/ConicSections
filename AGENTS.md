@@ -1,0 +1,98 @@
+# Agent Handoff Guide (Codex + Other Agents)
+
+This repository is a static, multi-page conic sections explorable built for GitHub Pages.
+
+## Project goals
+
+- Keep each topic page independently deployable and debuggable.
+- Preserve smooth UX for classroom projection and phone usage.
+- Keep math logic in shared modules, not duplicated across pages.
+- Preserve teacher-facing explanations and student-facing interactive prompts.
+
+## Architecture map
+
+- `index.html` landing page
+- `shared/conic-math.js` geometry + reflection math
+- `shared/draw-utils.js` canvas rendering utilities
+- `shared/interaction.js` pointer + URL state helpers
+- `shared/debug.js` smoke checks + persistent telemetry + debug panel
+- `shared/bootstrap.js` runtime loader guard for file://
+- `<page>/index.html` page markup and pedagogy copy
+- `<page>/app.js` page behavior module
+
+## Critical local-dev rule
+
+Do not open pages with `file://` directly.
+
+Why:
+- Browser blocks ES module imports under `file://` with CORS origin `null`.
+
+How to run correctly:
+
+```bash
+npm run dev
+```
+
+Then open `http://127.0.0.1:4173`.
+
+## Logging and diagnostics conventions
+
+- Every page must use `createDebugger("page-id")`.
+- Every page should run at least 2 smoke checks at boot.
+- Keep smoke checks deterministic and under ~5ms each.
+- Keep console prefixes stable for grepability:
+  - `[p1-ellipse]`
+  - `[p2-construction]`
+  - etc.
+- `?debug=1` enables verbose logging without changing behavior.
+- Every page should keep the debug panel mounted under controls.
+- Telemetry is persistent and shared across reloads:
+  - localStorage key: `conic:telemetry:v1`
+  - global window mirror: `window.__CONIC_LOGS__`
+
+## UX and pedagogy requirements
+
+- Each page should include:
+  - one clear plain-language concept statement
+  - one teacher prompt
+  - one student challenge/try-this prompt
+  - key vocabulary terms
+- Preserve touch-friendly controls and keyboard focus visibility.
+
+## URL state conventions
+
+- Persist interactive controls with `writeUrlState`.
+- Parse with `readUrlState` defaults.
+- Keep params short and stable (`e`, `a`, `theta`, etc.).
+
+## UX regression expectations
+
+Use Playwright tests before shipping UI changes.
+
+Core commands:
+
+```bash
+npm install
+npx playwright install
+npm run test:ux
+```
+
+Must-pass categories:
+- Navigation links load expected pages.
+- No uncaught page errors.
+- No console CORS/module errors under HTTP.
+- File protocol warning appears under `file://` (guard behavior).
+- Core interaction updates URL state.
+
+## Deployment
+
+- GitHub Pages workflow: `.github/workflows/deploy.yml`
+- UX CI workflow: `.github/workflows/ux-tests.yml`
+- Deploy target is static artifact upload from repo root.
+
+## Agent checklist before handoff
+
+1. Run UX tests (or clearly report why not run).
+2. Update docs if architecture or commands changed.
+3. Keep `README.md`, `AGENTS.md`, and lesson notes aligned.
+4. Add at least one lesson entry for incidents/regressions.

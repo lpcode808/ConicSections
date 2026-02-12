@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>05 - Hyperbola Reflection</title>
+    <link rel="stylesheet" href="../shared/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="site-header">
+        <strong>05. Hyperbola Reflection</strong>
+        <nav>
+          <a href="../04-parabola-reflection/index.html">Prev</a>
+          <a href="../06-conic-family/index.html">Next</a>
+        </nav>
+      </header>
+
+      <section class="hero card">
+        <h1>The Divergent Sibling</h1>
+        <p>
+          A hyperbola has two branches. Rays can reflect as if they came from or head toward the opposite focus,
+          which is why hyperbolic mirrors are useful in telescope optics.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="canvas-wrap"><canvas id="scene"></canvas></div>
+        </article>
+        <aside class="card controls">
+          <div class="control-row">
+            <label for="aRange">a</label>
+            <input id="aRange" type="range" min="2" max="7" step="0.05" />
+            <output id="aOut" class="pill"></output>
+          </div>
+          <div class="control-row">
+            <label for="bRange">b</label>
+            <input id="bRange" type="range" min="1.2" max="6" step="0.05" />
+            <output id="bOut" class="pill"></output>
+          </div>
+          <div class="control-row">
+            <label for="aimRange">Aim offset</label>
+            <input id="aimRange" type="range" min="-2.8" max="2.8" step="0.01" />
+            <output id="aimOut" class="pill"></output>
+          </div>
+          <div>
+            <button id="resetBtn" type="button">Reset Defaults</button>
+          </div>
+          <p class="kpi" id="info"></p>
+          <p class="note">Dotted line shows asymptotes; solid rays show one-bounce reflection.</p>
+          <div id="debugHost"></div>
+        </aside>
+      </section>
+
+      <section class="card spaced">
+        <h2>Teaching Notes</h2>
+        <div class="teach-grid">
+          <article class="teach-card">
+            <h3>Core Idea</h3>
+            <p>Hyperbolas have eccentricity greater than 1 and two disjoint branches.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Try This</h3>
+            <p>Adjust aim offset and track how reflected rays appear to align with the opposite focus.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Teacher Prompt</h3>
+            <p>Discuss why hyperbolic secondary mirrors are used in some telescope designs.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Vocabulary</h3>
+            <ul>
+              <li><strong>Asymptote:</strong> line the curve approaches indefinitely.</li>
+              <li><strong>Branch:</strong> one disconnected side of the hyperbola.</li>
+              <li><strong>Eccentricity:</strong> for hyperbola, always e &gt; 1.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <script src="../shared/bootstrap.js" data-module="./app.js"></script>
+  </body>
+</html>

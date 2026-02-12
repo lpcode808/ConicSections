@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>04 - Parabola Reflection</title>
+    <link rel="stylesheet" href="../shared/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="site-header">
+        <strong>04. Parabola Reflection</strong>
+        <nav>
+          <a href="../03-eccentricity/index.html">Prev</a>
+          <a href="../05-hyperbola-reflection/index.html">Next</a>
+        </nav>
+      </header>
+
+      <section class="hero card">
+        <h1>Parallel Rays and the Focus</h1>
+        <p>
+          A parabola turns parallel rays into a focused point, and rays emitted from the focus leave parallel.
+          Toggle between the two directions.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="canvas-wrap"><canvas id="scene"></canvas></div>
+        </article>
+        <aside class="card controls">
+          <div class="control-row">
+            <label for="pRange">Focal length p</label>
+            <input id="pRange" type="range" min="1.2" max="6" step="0.05" />
+            <output id="pOut" class="pill"></output>
+          </div>
+          <div class="control-row">
+            <label for="tiltRange">Incoming tilt</label>
+            <input id="tiltRange" type="range" min="-0.7" max="0.7" step="0.01" />
+            <output id="tiltOut" class="pill"></output>
+          </div>
+          <div>
+            <button id="modeBtn" type="button">Mode: Parallel -> Focus</button>
+            <button id="resetBtn" type="button">Reset Defaults</button>
+          </div>
+          <p class="kpi" id="modeText"></p>
+          <p class="note">Directrix: y = -p. Focus: (0, p).</p>
+          <div id="debugHost"></div>
+        </aside>
+      </section>
+
+      <section class="card spaced">
+        <h2>Teaching Notes</h2>
+        <div class="teach-grid">
+          <article class="teach-card">
+            <h3>Core Idea</h3>
+            <p>Parabolic mirrors convert parallel rays into one focus point, and reverse that path too.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Try This</h3>
+            <p>Switch modes and observe that each path is reversible when reflected over the same surface.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Teacher Prompt</h3>
+            <p>Connect this to flashlights, headlights, and satellite dishes.</p>
+          </article>
+          <article class="teach-card">
+            <h3>Vocabulary</h3>
+            <ul>
+              <li><strong>Directrix:</strong> fixed line in parabola definition.</li>
+              <li><strong>Focus:</strong> fixed point paired with directrix.</li>
+              <li><strong>Axis of symmetry:</strong> vertical line through focus.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <script src="../shared/bootstrap.js" data-module="./app.js"></script>
+  </body>
+</html>
