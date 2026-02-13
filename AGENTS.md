@@ -9,6 +9,30 @@ This repository is a static, multi-page conic sections explorable built for GitH
 - Keep math logic in shared modules, not duplicated across pages.
 - Preserve teacher-facing explanations and student-facing interactive prompts.
 
+## Default Standing Instructions (Do Not Wait To Be Asked)
+
+Treat these as always-on requirements for this repository:
+
+1. **Logging is mandatory, not optional.**
+   - Keep persistent telemetry active (`conic:telemetry:v1`).
+   - Do not remove debug panel features (snapshot/toggle/download/clear).
+   - Add meaningful event logs when introducing new controls/interactions.
+
+2. **Teacher-first communication comes first in docs/UI copy.**
+   - README top section should stay classroom/teacher oriented.
+   - New pages/features must include plain-language explanation, teacher prompt, and key vocabulary.
+
+3. **Ship-safe UX quality bar is required.**
+   - Preserve keyboard focus visibility and mobile usability.
+   - Run Playwright UX tests before handoff when possible.
+
+4. **Regression prevention is part of done.**
+   - If a bug is fixed, add/update a test and document the lesson in `docs/lessons-learned.md`.
+
+5. **GitHub Pages readiness must be maintained.**
+   - Keep workflows healthy (`deploy.yml`, `ux-tests.yml`).
+   - Avoid changes that break static hosting assumptions.
+
 ## Architecture map
 
 - `index.html` landing page
@@ -96,3 +120,4 @@ Must-pass categories:
 2. Update docs if architecture or commands changed.
 3. Keep `README.md`, `AGENTS.md`, and lesson notes aligned.
 4. Add at least one lesson entry for incidents/regressions.
+5. Verify logging/telemetry still works after UI changes.

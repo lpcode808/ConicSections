@@ -18,14 +18,14 @@
       </header>
 
       <section class="hero card" id="explainCard">
-        <h1>Why does the laser always hit the quartz?</h1>
+        <h1>Why does every shot sink in the opposite pocket?</h1>
         <p>
-          In an ellipse, a ray starting from one focus reflects to the other focus. Drag the emitter angle, inspect the
-          tangent, and test as many directions as you want.
+          In an ellipse, a ray starting from one focus reflects to the other focus. This is the same geometry shown in
+          the elliptical pool-table short: a ball launched from one focus bounces and heads to the pocket at the other focus.
         </p>
         <div class="legend">
-          <span><i class="swatch" style="background: var(--focus-a)"></i>Focus F1 (emitter)</span>
-          <span><i class="swatch" style="background: var(--focus-b)"></i>Focus F2 (target)</span>
+          <span><i class="swatch" style="background: var(--focus-a)"></i>Focus F1 (cue spot)</span>
+          <span><i class="swatch" style="background: var(--focus-b)"></i>Focus F2 (pocket)</span>
           <span><i class="swatch" style="background: var(--ray)"></i>Ray path</span>
         </div>
       </section>
@@ -57,6 +57,7 @@
           </div>
 
           <div>
+            <button id="poolPresetBtn" type="button">Apply Pool-Table Preset</button>
             <button id="burstBtn" type="button">Fire rays in all directions</button>
             <button id="presentBtn" type="button">Toggle Present Mode</button>
             <button id="resetBtn" type="button">Reset Defaults</button>
@@ -64,7 +65,7 @@
 
           <p class="kpi" id="kpiDistance"></p>
           <p class="kpi" id="kpiAngles"></p>
-          <p class="note">Challenge: can you find any angle where the reflected segment misses F2?</p>
+          <p class="note">Challenge: in pool-table preset mode, can you find any launch angle that misses the pocket at F2?</p>
           <div id="debugHost"></div>
         </aside>
       </section>
@@ -79,7 +80,7 @@
           </article>
           <article class="teach-card">
             <h3>Try This</h3>
-            <p>Set eccentricity high, then low. Ask: what changes in path shape and what stays true?</p>
+            <p>Apply the pool-table preset, fire all directions, then vary eccentricity. Ask: what changes and what remains true?</p>
           </article>
           <article class="teach-card">
             <h3>Teacher Prompt</h3>
