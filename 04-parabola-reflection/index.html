@@ -27,7 +27,9 @@
 
       <section class="grid">
         <article class="card">
-          <div class="canvas-wrap"><canvas id="scene"></canvas></div>
+          <div class="canvas-wrap">
+            <canvas id="scene" role="img" aria-label="Interactive parabola reflection diagram showing parallel rays and the focus"></canvas>
+          </div>
         </article>
         <aside class="card controls">
           <div class="control-row">
@@ -40,11 +42,11 @@
             <input id="tiltRange" type="range" min="-0.7" max="0.7" step="0.01" />
             <output id="tiltOut" class="pill"></output>
           </div>
-          <div>
-            <button id="modeBtn" type="button">Mode: Parallel -> Focus</button>
+          <div class="button-row" aria-label="Parabola reflection actions">
+            <button id="modeBtn" type="button" aria-pressed="false">Mode: Parallel -> Focus</button>
             <button id="resetBtn" type="button">Reset Defaults</button>
           </div>
-          <p class="kpi" id="modeText"></p>
+          <p class="kpi" id="modeText" role="status" aria-live="polite"></p>
           <p class="note">Directrix: y = -p. Focus: (0, p).</p>
           <div id="debugHost"></div>
         </aside>

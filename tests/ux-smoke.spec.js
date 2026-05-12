@@ -27,7 +27,8 @@ for (const pagePath of pages) {
       await expect(page.locator('canvas')).toBeVisible();
       await expect(page.locator('.debug-panel')).toBeVisible();
     } else {
-      await expect(page.locator('.nav-card')).toHaveCount(6);
+      await expect(page.locator('section', { has: page.getByRole('heading', { name: 'Suggested Sequence' }) }).locator('.nav-card')).toHaveCount(6);
+      await expect(page.getByRole('link', { name: /Bonus\. Elliptical Pool Table/ })).toBeVisible();
     }
 
     const bad = issues.filter(
@@ -59,6 +60,47 @@ test('P1 interaction updates URL state and toggles present mode', async ({ page 
 
   await page.locator('#presentBtn').click();
   await expect(page.locator('#explainCard')).toBeHidden();
+  await expect(page.locator('#presentBtn')).toHaveAttribute('aria-pressed', 'true');
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#explainCard')).toBeHidden();
+  await expect(page.locator('#presentBtn')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('interactive diagrams expose accessible names and live status', async ({ page }) => {
+  for (const pagePath of pages.filter((p) => p !== '/index.html')) {
+    await page.goto(pagePath, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('canvas[role="img"][aria-label]')).toBeVisible();
+    await expect(page.locator('[role="status"][aria-live="polite"]').first()).toBeVisible();
+  }
+});
+
+test('keyboard reaches primary controls and updates URL state', async ({ page }) => {
+  await page.goto('/06-conic-family/index.html', { waitUntil: 'domcontentloaded' });
+
+  await page.locator('#eRange').focus();
+  await page.keyboard.press('ArrowRight');
+
+  await expect
+    .poll(async () => new URL(page.url()).searchParams.get('e'))
+    .not.toBeNull();
+
+  await expect(page.locator('#typeLabel')).toContainText('Type:');
+});
+
+test('parabola mode toggle persists and exposes pressed state', async ({ page }) => {
+  await page.goto('/04-parabola-reflection/index.html', { waitUntil: 'domcontentloaded' });
+
+  const modeButton = page.locator('#modeBtn');
+  await expect(modeButton).toHaveAttribute('aria-pressed', 'false');
+  await modeButton.click();
+  await expect(modeButton).toHaveAttribute('aria-pressed', 'true');
+  await expect
+    .poll(async () => new URL(page.url()).searchParams.get('mode'))
+    .toBe('out');
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#modeBtn')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('debug snapshot button logs state to console', async ({ page }) => {
@@ -84,6 +126,9 @@ test('mobile layout still shows controls and canvas', async ({ page }) => {
   await page.goto('/04-parabola-reflection/index.html');
   await expect(page.locator('.canvas-wrap')).toBeVisible();
   await expect(page.locator('.controls')).toBeVisible();
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
 });
 
 test('file protocol shows clear startup warning instead of module CORS spam', async ({ page }) => {

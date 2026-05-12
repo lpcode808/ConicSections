@@ -32,7 +32,9 @@
 
       <section class="grid">
         <article class="card">
-          <div class="canvas-wrap"><canvas id="scene"></canvas></div>
+          <div class="canvas-wrap">
+            <canvas id="scene" role="img" aria-label="Interactive ellipse reflection diagram showing two foci, a bounce point, and reflected ray paths"></canvas>
+          </div>
         </article>
         <aside class="card controls">
           <div class="control-row">
@@ -56,14 +58,14 @@
             <output id="burstOut" class="pill"></output>
           </div>
 
-          <div>
+          <div class="button-row" aria-label="Ellipse reflection actions">
             <button id="poolPresetBtn" type="button">Apply Pool-Table Preset</button>
             <button id="burstBtn" type="button">Fire rays in all directions</button>
-            <button id="presentBtn" type="button">Toggle Present Mode</button>
+            <button id="presentBtn" type="button" aria-pressed="false">Toggle Present Mode</button>
             <button id="resetBtn" type="button">Reset Defaults</button>
           </div>
 
-          <p class="kpi" id="kpiDistance"></p>
+          <p class="kpi" id="kpiDistance" role="status" aria-live="polite"></p>
           <p class="kpi" id="kpiAngles"></p>
           <p class="note">Challenge: in pool-table preset mode, can you find any launch angle that misses the pocket at F2?</p>
           <div id="debugHost"></div>

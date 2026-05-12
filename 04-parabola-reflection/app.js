@@ -26,6 +26,12 @@
   pRange.value = state.p;
   tiltRange.value = state.tilt;
 
+  function syncModeButton() {
+    const isOut = state.mode === "out";
+    modeBtn.textContent = isOut ? "Mode: Focus -> Parallel" : "Mode: Parallel -> Focus";
+    modeBtn.setAttribute("aria-pressed", String(isOut));
+  }
+
   bindSliderWithNumber({
     slider: pRange,
     output: document.getElementById("pOut"),
@@ -48,7 +54,7 @@
 
   modeBtn.addEventListener("click", () => {
     state.mode = state.mode === "in" ? "out" : "in";
-    modeBtn.textContent = state.mode === "in" ? "Mode: Parallel -> Focus" : "Mode: Focus -> Parallel";
+    syncModeButton();
     persist();
     logger.event("mode.toggle", { mode: state.mode });
   });
@@ -59,7 +65,7 @@
     tiltRange.value = state.tilt;
     pRange.dispatchEvent(new Event("input", { bubbles: true }));
     tiltRange.dispatchEvent(new Event("input", { bubbles: true }));
-    modeBtn.textContent = "Mode: Parallel -> Focus";
+    syncModeButton();
     persist();
     logger.event("reset.defaults", { ...state });
   });
@@ -125,6 +131,7 @@
   });
 
   logger.info("page.init", { ...state });
+  syncModeButton();
 
   logger.smoke([
     {
@@ -137,6 +144,10 @@
         const dLine = Math.abs(y + p);
         return Math.abs(dFocus - dLine) < 1e-8;
       }
+    },
+    {
+      name: "mode state is valid",
+      run: () => state.mode === "in" || state.mode === "out"
     }
   ]);
 

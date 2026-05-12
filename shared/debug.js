@@ -262,7 +262,7 @@ export function mountDebugPanel({ target = document.body, getState, namespace = 
       <button type="button" data-action="download">Download telemetry JSON</button>
       <button type="button" data-action="clear">Clear telemetry history</button>
       <p class="debug-hint">Enable with <code>?debug=1</code></p>
-      <p class="debug-hint" data-role="count"></p>
+      <p class="debug-hint" data-role="count" role="status" aria-live="polite"></p>
     </div>
   `;
 

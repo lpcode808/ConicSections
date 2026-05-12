@@ -27,7 +27,9 @@
 
       <section class="grid">
         <article class="card">
-          <div class="canvas-wrap"><canvas id="scene"></canvas></div>
+          <div class="canvas-wrap">
+            <canvas id="scene" role="img" aria-label="Interactive hyperbola reflection diagram showing foci, asymptotes, and a reflected ray"></canvas>
+          </div>
         </article>
         <aside class="card controls">
           <div class="control-row">
@@ -45,10 +47,10 @@
             <input id="aimRange" type="range" min="-2.8" max="2.8" step="0.01" />
             <output id="aimOut" class="pill"></output>
           </div>
-          <div>
+          <div class="button-row" aria-label="Hyperbola reflection actions">
             <button id="resetBtn" type="button">Reset Defaults</button>
           </div>
-          <p class="kpi" id="info"></p>
+          <p class="kpi" id="info" role="status" aria-live="polite"></p>
           <p class="note">Dotted line shows asymptotes; solid rays show one-bounce reflection.</p>
           <div id="debugHost"></div>
         </aside>

@@ -99,6 +99,7 @@
   presentBtn.addEventListener("click", () => {
     state.present = !state.present;
     document.getElementById("explainCard").style.display = state.present ? "none" : "block";
+    presentBtn.setAttribute("aria-pressed", String(state.present));
     persist();
     logger.event("present.toggle", { present: state.present });
   });
@@ -139,6 +140,7 @@
     angleRange.dispatchEvent(new Event("input", { bubbles: true }));
     burstCount.dispatchEvent(new Event("input", { bubbles: true }));
     document.getElementById("explainCard").style.display = "block";
+    presentBtn.setAttribute("aria-pressed", "false");
     persist();
     logger.event("reset.defaults", { ...state });
   });
@@ -305,6 +307,7 @@
   if (state.present) {
     document.getElementById("explainCard").style.display = "none";
   }
+  presentBtn.setAttribute("aria-pressed", String(state.present));
 
   logger.info("page.init", { ...state });
 
