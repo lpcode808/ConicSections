@@ -17,6 +17,18 @@
         </nav>
       </header>
 
+      <nav class="progress-strip" aria-label="Module progress">
+        <span class="progress-label">Module 4 of 6</span>
+        <span class="progress-dots">
+          <a class="progress-dot" href="../01-ellipse-reflection/index.html" aria-label="Module 1">1</a>
+          <a class="progress-dot" href="../02-ellipse-construction/index.html" aria-label="Module 2">2</a>
+          <a class="progress-dot" href="../03-eccentricity/index.html" aria-label="Module 3">3</a>
+          <a class="progress-dot" href="../04-parabola-reflection/index.html" aria-current="page" aria-label="Module 4, current page">4</a>
+          <a class="progress-dot" href="../05-hyperbola-reflection/index.html" aria-label="Module 5">5</a>
+          <a class="progress-dot" href="../06-conic-family/index.html" aria-label="Module 6">6</a>
+        </span>
+      </nav>
+
       <section class="hero card">
         <h1>Parallel Rays and the Focus</h1>
         <p>
@@ -32,6 +44,11 @@
           </div>
         </article>
         <aside class="card controls">
+          <div class="start-here">
+            <h3>Try this first</h3>
+            <p>Watch the parallel rays sweep down and converge at the focus. Now press <strong>Mode</strong> to reverse the path. Predict where the rays will exit before the toggle happens.</p>
+          </div>
+
           <div class="control-row">
             <label for="pRange">Focal length p</label>
             <input id="pRange" type="range" min="1.2" max="6" step="0.05" />
@@ -46,8 +63,9 @@
             <button id="modeBtn" type="button" aria-pressed="false">Mode: Parallel -> Focus</button>
             <button id="resetBtn" type="button">Reset Defaults</button>
           </div>
+          <p class="look-for">What to look for ↓</p>
           <p class="kpi" id="modeText" role="status" aria-live="polite"></p>
-          <p class="note">Directrix: y = -p. Focus: (0, p).</p>
+          <p class="note">Directrix: y = -p. Focus: (0, p). Think satellite dishes (parallel → focus) and flashlights (focus → parallel).</p>
           <div id="debugHost"></div>
         </aside>
       </section>
