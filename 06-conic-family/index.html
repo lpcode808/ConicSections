@@ -40,6 +40,18 @@
         </nav>
       </header>
 
+      <nav class="progress-strip" aria-label="Module progress">
+        <span class="progress-label">Module 6 of 6 — capstone</span>
+        <span class="progress-dots">
+          <a class="progress-dot" href="../01-ellipse-reflection/index.html" aria-label="Module 1">1</a>
+          <a class="progress-dot" href="../02-ellipse-construction/index.html" aria-label="Module 2">2</a>
+          <a class="progress-dot" href="../03-eccentricity/index.html" aria-label="Module 3">3</a>
+          <a class="progress-dot" href="../04-parabola-reflection/index.html" aria-label="Module 4">4</a>
+          <a class="progress-dot" href="../05-hyperbola-reflection/index.html" aria-label="Module 5">5</a>
+          <a class="progress-dot" href="../06-conic-family/index.html" aria-current="page" aria-label="Module 6, current page">6</a>
+        </span>
+      </nav>
+
       <section class="hero card">
         <h1>One Rule, Many Curves</h1>
         <p>
@@ -56,6 +68,11 @@
           </div>
         </article>
         <aside class="card controls">
+          <div class="start-here">
+            <h3>Try this first</h3>
+            <p>Sweep <strong>e</strong> slowly from 0 to 2. Pause at <strong>e = 1</strong>. What curve do you see at that exact moment? That's the boundary between ellipse and hyperbola.</p>
+          </div>
+
           <div class="control-row">
             <label for="eRange">Eccentricity e</label>
             <input id="eRange" type="range" min="0" max="2" step="0.01" />
@@ -69,6 +86,7 @@
           <div class="button-row" aria-label="Conic family actions">
             <button id="resetBtn" type="button">Reset Defaults</button>
           </div>
+          <p class="look-for">What to look for ↓</p>
           <p class="kpi" id="typeLabel" role="status" aria-live="polite"></p>
           <p class="kpi" id="ratioLabel"></p>
           <div class="cone" role="img" aria-label="Cone slice metaphor that rotates as eccentricity changes">

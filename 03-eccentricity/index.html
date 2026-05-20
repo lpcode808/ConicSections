@@ -17,6 +17,18 @@
         </nav>
       </header>
 
+      <nav class="progress-strip" aria-label="Module progress">
+        <span class="progress-label">Module 3 of 6</span>
+        <span class="progress-dots">
+          <a class="progress-dot" href="../01-ellipse-reflection/index.html" aria-label="Module 1">1</a>
+          <a class="progress-dot" href="../02-ellipse-construction/index.html" aria-label="Module 2">2</a>
+          <a class="progress-dot" href="../03-eccentricity/index.html" aria-current="page" aria-label="Module 3, current page">3</a>
+          <a class="progress-dot" href="../04-parabola-reflection/index.html" aria-label="Module 4">4</a>
+          <a class="progress-dot" href="../05-hyperbola-reflection/index.html" aria-label="Module 5">5</a>
+          <a class="progress-dot" href="../06-conic-family/index.html" aria-label="Module 6">6</a>
+        </span>
+      </nav>
+
       <section class="hero card">
         <h1>From Circle to Needle</h1>
         <p>
@@ -32,6 +44,11 @@
           </div>
         </article>
         <aside class="card controls">
+          <div class="start-here">
+            <h3>Try this first</h3>
+            <p>Start with <strong>e = 0</strong> (a perfect circle). Slowly slide <strong>e</strong> toward 1. Predict where the two foci will move before you look — and watch <em>a</em> stay fixed while <em>b</em> shrinks.</p>
+          </div>
+
           <div class="control-row">
             <label for="eRange">Eccentricity e</label>
             <input id="eRange" type="range" min="0" max="0.99" step="0.01" />
@@ -45,12 +62,14 @@
           <div class="button-row" aria-label="Eccentricity actions">
             <button id="resetBtn" type="button">Reset Defaults</button>
           </div>
+          <p class="look-for">What to look for ↓</p>
           <p class="kpi" id="dims" role="status" aria-live="polite"></p>
           <p class="kpi" id="paths"></p>
+          <p class="note" style="margin-top:0.5rem">Real eccentricities for comparison:</p>
           <ul>
-            <li>Earth orbit: e ~ 0.017</li>
+            <li>Earth orbit: e ~ 0.017 (nearly circular)</li>
             <li>Pluto orbit: e ~ 0.25</li>
-            <li>Halley comet: e ~ 0.97</li>
+            <li>Halley comet: e ~ 0.97 (very stretched)</li>
           </ul>
           <div id="debugHost"></div>
         </aside>
