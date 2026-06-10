@@ -17,17 +17,8 @@
         </nav>
       </header>
 
-      <nav class="progress-strip" aria-label="Module progress">
-        <span class="progress-label">Module 4 of 6</span>
-        <span class="progress-dots">
-          <a class="progress-dot" href="../01-ellipse-reflection/index.html" aria-label="Module 1">1</a>
-          <a class="progress-dot" href="../02-ellipse-construction/index.html" aria-label="Module 2">2</a>
-          <a class="progress-dot" href="../03-eccentricity/index.html" aria-label="Module 3">3</a>
-          <a class="progress-dot" href="../04-parabola-reflection/index.html" aria-current="page" aria-label="Module 4, current page">4</a>
-          <a class="progress-dot" href="../05-hyperbola-reflection/index.html" aria-label="Module 5">5</a>
-          <a class="progress-dot" href="../06-conic-family/index.html" aria-label="Module 6">6</a>
-        </span>
-      </nav>
+      <!-- Filled from shared/modules.js at boot -->
+      <nav class="progress-strip" aria-label="Module progress"></nav>
 
       <section class="hero card">
         <h1>Parallel Rays and the Focus</h1>
@@ -42,6 +33,7 @@
           <div class="canvas-wrap">
             <canvas id="scene" role="img" aria-label="Interactive parabola reflection diagram showing parallel rays and the focus"></canvas>
           </div>
+          <p class="drag-hint">Tip: drag the sky to aim the incoming light, or grab the ringed focus point to change the dish's focal length.</p>
         </article>
         <aside class="card controls">
           <div class="start-here">

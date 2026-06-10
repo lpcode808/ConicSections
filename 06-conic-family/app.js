@@ -1,69 +1,50 @@
-  import { conicPoint, conicType, distancePointToLine, distance, lineFromPoints } from "../shared/conic-math.js";
-  import {
-    setupHiDPICanvas,
-    worldToScreenFactory,
-    clear,
-    drawGrid,
-    drawAxes,
-    drawPoint,
-    drawLine
-  } from "../shared/draw-utils.js";
-  import { readUrlState, writeUrlState, bindSliderWithNumber } from "../shared/interaction.js";
-  import { createDebugger, mountDebugPanel } from "../shared/debug.js";
+import { conicPoint, conicType, distancePointToLine, distance, lineFromPoints } from "../shared/conic-math.js";
+import {
+  clear,
+  drawGrid,
+  drawAxes,
+  drawPoint,
+  drawLine,
+  drawHandle,
+  drawSegmentBar
+} from "../shared/draw-utils.js";
+import { createExplorable } from "../shared/explorable.js";
 
-  const logger = createDebugger("p6-family");
-  const defaults = { e: 0.7, l: 4.2 };
-  const state = readUrlState(defaults);
+const defaults = { e: 0.7, l: 4.2, theta: 0.8 };
 
-  const eRange = document.getElementById("eRange");
-  const lRange = document.getElementById("lRange");
-  const canvas = document.getElementById("scene");
-  const plane = document.getElementById("plane");
-  const resetBtn = document.getElementById("resetBtn");
+const plane = document.getElementById("plane");
 
-  eRange.value = state.e;
-  lRange.value = state.l;
+function validConicPoint(e, l, theta) {
+  const p = conicPoint(e, l, theta);
+  if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) return null;
+  if (p.r < 0 || Math.abs(p.x) > 40 || Math.abs(p.y) > 40) return null;
+  return p;
+}
 
-  bindSliderWithNumber({
-    slider: eRange,
-    output: document.getElementById("eOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.e = v;
-      persist();
+createExplorable({
+  id: "p6-family",
+  moduleId: "06-conic-family",
+  defaults,
+  url: { e: 2, l: 2, theta: 3 },
+  view: { unitsWide: 30 },
+  params: [
+    { key: "e", slider: "eRange", output: "eOut" },
+    { key: "l", slider: "lRange", output: "lOut" },
+    {
+      key: "theta",
+      slider: "thetaRange",
+      output: "thetaOut",
+      format: (v) => `${((v * 180) / Math.PI).toFixed(1)}deg`
     }
-  });
-
-  bindSliderWithNumber({
-    slider: lRange,
-    output: document.getElementById("lOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.l = v;
-      persist();
+  ],
+  drag: {
+    onMove({ world, state }) {
+      // Drag P anywhere along the curve; ignore angles where the curve escapes.
+      const theta = Math.atan2(world.y, world.x);
+      if (validConicPoint(state.e, state.l, theta)) state.theta = theta;
     }
-  });
-
-  resetBtn.addEventListener("click", () => {
-    Object.assign(state, defaults);
-    eRange.value = state.e;
-    lRange.value = state.l;
-    eRange.dispatchEvent(new Event("input", { bubbles: true }));
-    lRange.dispatchEvent(new Event("input", { bubbles: true }));
-    persist();
-    logger.event("reset.defaults", { ...state });
-  });
-
-  function persist() {
-    writeUrlState({ e: state.e.toFixed(2), l: state.l.toFixed(2) });
-    logger.dbg("state.persist", state);
-  }
-
-  function render() {
-    const rect = canvas.getBoundingClientRect();
-    const ctx = setupHiDPICanvas(canvas);
-    const mapper = worldToScreenFactory(rect.width, rect.height, rect.width / 30);
-
+  },
+  render({ ctx, mapper, rect, state }) {
     clear(ctx, rect.width, rect.height);
     drawGrid(ctx, rect.width, rect.height);
     drawAxes(ctx, mapper, rect.width, rect.height);
@@ -71,7 +52,9 @@
     const e = state.e;
     const l = state.l;
     const focus = { x: 0, y: 0 };
-    const directrixX = -l / Math.max(e, 0.01);
+    // For r = l / (1 + e·cos θ) with focus at the origin, the matching
+    // directrix is at x = +l/e (same side as the curve's nearest point).
+    const directrixX = l / Math.max(e, 0.01);
 
     drawLine(ctx, mapper, { x: directrixX, y: -20 }, { x: directrixX, y: 20 }, "#a1a1aa", 1.6, [7, 7]);
     drawPoint(ctx, mapper, focus, "#60a5fa", 6, "Focus");
@@ -83,10 +66,8 @@
 
     for (let i = 0; i <= steps; i += 1) {
       const theta = thetaMin + (i / steps) * (thetaMax - thetaMin);
-      const p = conicPoint(e, l, theta);
-      if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
-      if (Math.abs(p.x) > 40 || Math.abs(p.y) > 40 || p.r < 0) continue;
-      points.push(p);
+      const p = validConicPoint(e, l, theta);
+      if (p) points.push(p);
     }
 
     ctx.strokeStyle = "#2dd4bf";
@@ -99,14 +80,32 @@
     });
     ctx.stroke();
 
-    const sample = conicPoint(e, l, 0.8);
-    if (sample && sample.r > 0 && Math.abs(sample.x) < 40 && Math.abs(sample.y) < 40) {
+    const sample = validConicPoint(e, l, state.theta);
+    if (sample) {
+      drawHandle(ctx, mapper, sample, "#facc15");
       drawPoint(ctx, mapper, sample, "#facc15", 5, "P");
       drawLine(ctx, mapper, focus, sample, "#facc15", 1.9);
       drawLine(ctx, mapper, sample, { x: directrixX, y: sample.y }, "#f97316", 1.9);
 
-      const ratio = distance(sample, focus) / Math.max(1e-9, distancePointToLine(sample, lineFromPoints({ x: directrixX, y: -5 }, { x: directrixX, y: 5 })));
-      document.getElementById("ratioLabel").textContent = `At sample P, distance ratio is ${ratio.toFixed(3)} (target e=${e.toFixed(3)})`;
+      const dFocus = distance(sample, focus);
+      const dLine = Math.max(1e-9, distancePointToLine(sample, lineFromPoints({ x: directrixX, y: -5 }, { x: directrixX, y: 5 })));
+      document.getElementById("ratioLabel").textContent =
+        `At P: d(focus) = ${dFocus.toFixed(2)}, d(directrix) = ${dLine.toFixed(2)}, ratio ${(dFocus / dLine).toFixed(3)} (target e = ${e.toFixed(3)})`;
+
+      // Both distances drawn to the same scale: their ratio is the whole story.
+      const barMax = Math.max(dFocus, dLine) * 1.15;
+      drawSegmentBar(
+        ctx,
+        { x: 16, y: rect.height - 44, width: rect.width - 32, height: 9 },
+        [{ value: dFocus, color: "#facc15", label: "P → focus" }],
+        { max: barMax, title: "Drag P along the curve: the ratio of these bars stays e" }
+      );
+      drawSegmentBar(
+        ctx,
+        { x: 16, y: rect.height - 22, width: rect.width - 32, height: 9 },
+        [{ value: dLine, color: "#f97316", label: "P → directrix" }],
+        { max: barMax }
+      );
     }
 
     const type = conicType(e);
@@ -115,19 +114,8 @@
     // Visual cone-slicer cue linked to eccentricity.
     const tilt = -20 + (e / 2) * 55;
     plane.style.transform = `rotate(${tilt.toFixed(1)}deg)`;
-
-    requestAnimationFrame(render);
-  }
-
-  mountDebugPanel({
-    target: document.getElementById("debugHost"),
-    namespace: "p6-family",
-    getState: () => ({ ...state })
-  });
-
-  logger.info("page.init", { ...state });
-
-  logger.smoke([
+  },
+  smoke: [
     {
       name: "conic type transitions",
       run: () => conicType(0.4) === "ellipse" && conicType(1) === "parabola" && conicType(1.4) === "hyperbola"
@@ -135,10 +123,25 @@
     {
       name: "sample conic point finite",
       run: () => {
-        const p = conicPoint(state.e, state.l, 0.5);
+        const p = conicPoint(defaults.e, defaults.l, 0.5);
         return !p || (Number.isFinite(p.x) && Number.isFinite(p.y));
       }
+    },
+    {
+      name: "focus-directrix ratio equals e at sample points",
+      run: () => {
+        const e = 0.7;
+        const l = 4.2;
+        const directrixX = l / e;
+        const line = lineFromPoints({ x: directrixX, y: -5 }, { x: directrixX, y: 5 });
+        for (const theta of [0.3, 1.1, 2.0, -1.4]) {
+          const p = conicPoint(e, l, theta);
+          if (!p) return false;
+          const ratio = distance(p, { x: 0, y: 0 }) / distancePointToLine(p, line);
+          if (Math.abs(ratio - e) > 1e-6) return false;
+        }
+        return true;
+      }
     }
-  ]);
-
-  requestAnimationFrame(render);
+  ]
+});

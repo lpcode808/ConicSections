@@ -1,85 +1,63 @@
-  import { parabolaNormal, rayParabolaIntersection, reflectVector, normalize, add, scale } from "../shared/conic-math.js";
-  import {
-    setupHiDPICanvas,
-    worldToScreenFactory,
-    clear,
-    drawGrid,
-    drawAxes,
-    drawParabola,
-    drawPoint,
-    drawLine
-  } from "../shared/draw-utils.js";
-  import { readUrlState, writeUrlState, bindSliderWithNumber } from "../shared/interaction.js";
-  import { createDebugger, mountDebugPanel } from "../shared/debug.js";
+import { clamp, parabolaNormal, rayParabolaIntersection, reflectVector, normalize, add, scale } from "../shared/conic-math.js";
+import {
+  clear,
+  drawGrid,
+  drawAxes,
+  drawParabola,
+  drawPoint,
+  drawLine,
+  drawHandle
+} from "../shared/draw-utils.js";
+import { createExplorable } from "../shared/explorable.js";
 
-  const logger = createDebugger("p4-parabola");
-  const defaults = { p: 3, tilt: 0, mode: "in" };
-  const state = readUrlState(defaults);
+const defaults = { p: 3, tilt: 0, mode: "in" };
 
-  const canvas = document.getElementById("scene");
-  const pRange = document.getElementById("pRange");
-  const tiltRange = document.getElementById("tiltRange");
-  const modeBtn = document.getElementById("modeBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const modeText = document.getElementById("modeText");
+const modeBtn = document.getElementById("modeBtn");
+const modeText = document.getElementById("modeText");
 
-  pRange.value = state.p;
-  tiltRange.value = state.tilt;
+// Locked at pointer-down: grabbing the focus adjusts p, anywhere else aims the light.
+let dragTarget = null;
 
-  function syncModeButton() {
-    const isOut = state.mode === "out";
-    modeBtn.textContent = isOut ? "Mode: Focus -> Parallel" : "Mode: Parallel -> Focus";
-    modeBtn.setAttribute("aria-pressed", String(isOut));
+function applyDrag({ world, state }) {
+  if (dragTarget === "focus" || state.mode === "out") {
+    state.p = clamp(world.y, 1.2, 6);
+  } else {
+    // Point at where the light comes from; rays flow from there toward the dish.
+    const dir = normalize({ x: -world.x, y: state.p - world.y });
+    state.tilt = clamp(Math.atan2(dir.x, -dir.y), -0.7, 0.7);
   }
+}
 
-  bindSliderWithNumber({
-    slider: pRange,
-    output: document.getElementById("pOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.p = v;
-      persist();
+const { state, logger, setValues } = createExplorable({
+  id: "p4-parabola",
+  moduleId: "04-parabola-reflection",
+  defaults,
+  url: { p: 2, tilt: 3, mode: "raw" },
+  view: { unitsWide: 26, center: { x: 0, y: 3.2 } },
+  params: [
+    { key: "p", slider: "pRange", output: "pOut" },
+    {
+      key: "tilt",
+      slider: "tiltRange",
+      output: "tiltOut",
+      format: (v) => `${((v * 180) / Math.PI).toFixed(1)}deg`
     }
-  });
-  bindSliderWithNumber({
-    slider: tiltRange,
-    output: document.getElementById("tiltOut"),
-    precision: 2,
-    format: (v) => `${((v * 180) / Math.PI).toFixed(1)}deg`,
-    onInput: (v) => {
-      state.tilt = v;
-      persist();
+  ],
+  drag: {
+    onStart(info) {
+      const focusScreen = info.mapper.toScreen({ x: 0, y: info.state.p });
+      const near = Math.hypot(info.screen.x - focusScreen.x, info.screen.y - focusScreen.y) < 22;
+      dragTarget = near ? "focus" : "sky";
+      applyDrag(info);
+    },
+    onMove(info) {
+      applyDrag(info);
     }
-  });
-
-  modeBtn.addEventListener("click", () => {
-    state.mode = state.mode === "in" ? "out" : "in";
+  },
+  onReset() {
     syncModeButton();
-    persist();
-    logger.event("mode.toggle", { mode: state.mode });
-  });
-
-  resetBtn.addEventListener("click", () => {
-    Object.assign(state, defaults);
-    pRange.value = state.p;
-    tiltRange.value = state.tilt;
-    pRange.dispatchEvent(new Event("input", { bubbles: true }));
-    tiltRange.dispatchEvent(new Event("input", { bubbles: true }));
-    syncModeButton();
-    persist();
-    logger.event("reset.defaults", { ...state });
-  });
-
-  function persist() {
-    writeUrlState({ p: state.p.toFixed(2), tilt: state.tilt.toFixed(3), mode: state.mode });
-    logger.dbg("state.persist", state);
-  }
-
-  function render() {
-    const rect = canvas.getBoundingClientRect();
-    const ctx = setupHiDPICanvas(canvas);
-    const mapper = worldToScreenFactory(rect.width, rect.height, rect.width / 26, { x: 0, y: 3.2 });
-
+  },
+  render({ ctx, mapper, rect, state }) {
     clear(ctx, rect.width, rect.height);
     drawGrid(ctx, rect.width, rect.height);
     drawAxes(ctx, mapper, rect.width, rect.height);
@@ -87,6 +65,7 @@
     const p = state.p;
     const focus = { x: 0, y: p };
     drawParabola(ctx, mapper, p, -13, 13, "#22c55e", 3);
+    drawHandle(ctx, mapper, focus, "#60a5fa");
     drawPoint(ctx, mapper, focus, "#60a5fa", 6, "Focus");
     drawLine(ctx, mapper, { x: -18, y: -p }, { x: 18, y: -p }, "#a1a1aa", 1.5, [7, 6]);
 
@@ -120,20 +99,8 @@
       state.mode === "in"
         ? "Parallel rays arrive and converge near focus."
         : "Rays from focus depart nearly parallel.";
-
-    requestAnimationFrame(render);
-  }
-
-  mountDebugPanel({
-    target: document.getElementById("debugHost"),
-    namespace: "p4-parabola",
-    getState: () => ({ ...state })
-  });
-
-  logger.info("page.init", { ...state });
-  syncModeButton();
-
-  logger.smoke([
+  },
+  smoke: [
     {
       name: "focus-directrix distance match for parabola point",
       run: () => {
@@ -149,6 +116,19 @@
       name: "mode state is valid",
       run: () => state.mode === "in" || state.mode === "out"
     }
-  ]);
+  ]
+});
 
-  requestAnimationFrame(render);
+function syncModeButton() {
+  const isOut = state.mode === "out";
+  modeBtn.textContent = isOut ? "Mode: Focus -> Parallel" : "Mode: Parallel -> Focus";
+  modeBtn.setAttribute("aria-pressed", String(isOut));
+}
+
+modeBtn.addEventListener("click", () => {
+  setValues({ mode: state.mode === "in" ? "out" : "in" });
+  syncModeButton();
+  logger.event("mode.toggle", { mode: state.mode });
+});
+
+syncModeButton();

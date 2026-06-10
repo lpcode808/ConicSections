@@ -36,13 +36,26 @@ Treat these as always-on requirements for this repository:
 ## Architecture map
 
 - `index.html` landing page
+- `shared/explorable.js` page runtime: declarative params, URL state, reset, mapper, drag, RAF loop, debug mounting
+- `shared/modules.js` module manifest (single source for the sequence) + progress strip renderer
 - `shared/conic-math.js` geometry + reflection math
-- `shared/draw-utils.js` canvas rendering utilities
+- `shared/draw-utils.js` canvas rendering utilities (incl. `drawHandle`, `drawSegmentBar`, `drawAngleArc`)
 - `shared/interaction.js` pointer + URL state helpers
 - `shared/debug.js` smoke checks + persistent telemetry + debug panel
 - `shared/bootstrap.js` runtime loader guard for file://
 - `<page>/index.html` page markup and pedagogy copy
-- `<page>/app.js` page behavior module
+- `<page>/app.js` page behavior module built on `createExplorable`
+
+## Adding a new module (works beyond conics)
+
+The runtime is concept-agnostic; only `conic-math.js` is conic-specific. To add a module:
+
+1. Add an entry to `shared/modules.js` (`id`, `num`, `title`, `tag`, `blurb`). Progress strips on every page update automatically.
+2. Create `<NN-slug>/index.html` from an existing page: hero question, `<nav class="progress-strip">` placeholder, canvas + `drag-hint`, controls with slider/output pairs, `start-here`, `look-for` KPIs, teaching-notes grid, `debugHost`, bootstrap script tag.
+3. Create `<NN-slug>/app.js` calling `createExplorable({ id, moduleId, defaults, url, view, params, drag, render, smoke })`. Put new math in a shared module (e.g. `shared/trig-math.js`), not in the page.
+4. Add a nav card to the landing page and a Playwright check for the page's core interaction.
+
+Explorable design bar for every module (Bret Victor): one direct-manipulation gesture on the canvas itself (not just sliders), visible drag affordances (`drawHandle`), and the page's core invariant drawn live (e.g. `drawSegmentBar`), not only stated as text.
 
 ## Critical local-dev rule
 
@@ -100,6 +113,14 @@ npm install
 npx playwright install
 npm run test:ux
 ```
+
+If another local server already occupies port 4173, run on a different port:
+
+```bash
+CONIC_TEST_PORT=4317 npm run test:ux
+```
+
+Page smoke checks (`logger.smoke`) are enforced: a `CHECK FAIL` in the console fails the clean-load Playwright tests.
 
 Must-pass categories:
 - Navigation links load expected pages.

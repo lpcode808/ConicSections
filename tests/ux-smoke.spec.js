@@ -36,7 +36,9 @@ for (const pagePath of pages) {
         msg.includes('CORS') ||
         msg.includes('ERR_FAILED') ||
         msg.includes('Failed to load module script') ||
-        msg.includes('Uncaught')
+        msg.includes('Uncaught') ||
+        msg.includes('CHECK FAIL') ||
+        msg.includes('Smoke test threw')
     );
     expect(bad, `Unexpected errors on ${pagePath}:\n${bad.join('\n')}`).toEqual([]);
   });
@@ -73,6 +75,51 @@ test('interactive diagrams expose accessible names and live status', async ({ pa
     await expect(page.locator('canvas[role="img"][aria-label]')).toBeVisible();
     await expect(page.locator('[role="status"][aria-live="polite"]').first()).toBeVisible();
   }
+});
+
+test('progress strip renders all modules from shared manifest', async ({ page }) => {
+  await page.goto('/03-eccentricity/index.html', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.progress-strip .progress-dot')).toHaveCount(6);
+  await expect(page.locator('.progress-strip [aria-current="page"]')).toHaveText('3');
+  await expect(page.locator('.progress-strip .progress-label')).toContainText('Module 3 of 6');
+});
+
+test('canvas drag updates URL state on P1', async ({ page }) => {
+  await page.goto('/01-ellipse-reflection/index.html', { waitUntil: 'domcontentloaded' });
+  const before = new URL(page.url()).searchParams.get('theta');
+
+  const box = await page.locator('#scene').boundingBox();
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.25, { steps: 4 });
+  await page.mouse.up();
+
+  await expect
+    .poll(async () => new URL(page.url()).searchParams.get('theta'))
+    .not.toBe(before);
+});
+
+test('P6 sample point is draggable and persists theta', async ({ page }) => {
+  await page.goto('/06-conic-family/index.html', { waitUntil: 'domcontentloaded' });
+
+  const thetaSlider = page.locator('#thetaRange');
+  await thetaSlider.evaluate((el) => {
+    el.value = '1.5';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await expect
+    .poll(async () => new URL(page.url()).searchParams.get('theta'))
+    .toBe('1.500');
+
+  const box = await page.locator('#scene').boundingBox();
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.35, { steps: 4 });
+  await page.mouse.up();
+
+  await expect
+    .poll(async () => new URL(page.url()).searchParams.get('theta'))
+    .not.toBe('1.500');
 });
 
 test('keyboard reaches primary controls and updates URL state', async ({ page }) => {

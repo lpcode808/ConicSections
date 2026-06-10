@@ -1,89 +1,43 @@
-  import {
-    add,
-    scale,
-    normalize,
-    sub,
-    reflectVector,
-    hyperbolaNormal,
-    rayHyperbolaIntersection
-  } from "../shared/conic-math.js";
-  import {
-    setupHiDPICanvas,
-    worldToScreenFactory,
-    clear,
-    drawGrid,
-    drawAxes,
-    drawHyperbola,
-    drawPoint,
-    drawLine
-  } from "../shared/draw-utils.js";
-  import { readUrlState, writeUrlState, bindSliderWithNumber } from "../shared/interaction.js";
-  import { createDebugger, mountDebugPanel } from "../shared/debug.js";
+import {
+  clamp,
+  add,
+  scale,
+  normalize,
+  sub,
+  reflectVector,
+  hyperbolaNormal,
+  rayHyperbolaIntersection
+} from "../shared/conic-math.js";
+import {
+  clear,
+  drawGrid,
+  drawAxes,
+  drawHyperbola,
+  drawPoint,
+  drawLine,
+  drawHandle
+} from "../shared/draw-utils.js";
+import { createExplorable } from "../shared/explorable.js";
 
-  const logger = createDebugger("p5-hyperbola");
-  const defaults = { a: 4, b: 2.6, aim: 0.2 };
-  const state = readUrlState(defaults);
+const defaults = { a: 4, b: 2.6, aim: 0.2 };
 
-  const aRange = document.getElementById("aRange");
-  const bRange = document.getElementById("bRange");
-  const aimRange = document.getElementById("aimRange");
-  const canvas = document.getElementById("scene");
-  const resetBtn = document.getElementById("resetBtn");
-
-  aRange.value = state.a;
-  bRange.value = state.b;
-  aimRange.value = state.aim;
-
-  bindSliderWithNumber({
-    slider: aRange,
-    output: document.getElementById("aOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.a = v;
-      persist();
+createExplorable({
+  id: "p5-hyperbola",
+  moduleId: "05-hyperbola-reflection",
+  defaults,
+  url: { a: 2, b: 2, aim: 2 },
+  view: { unitsWide: 34 },
+  params: [
+    { key: "a", slider: "aRange", output: "aOut" },
+    { key: "b", slider: "bRange", output: "bOut" },
+    { key: "aim", slider: "aimRange", output: "aimOut" }
+  ],
+  drag: {
+    onMove({ world, state }) {
+      state.aim = clamp(world.y, -2.8, 2.8);
     }
-  });
-  bindSliderWithNumber({
-    slider: bRange,
-    output: document.getElementById("bOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.b = v;
-      persist();
-    }
-  });
-  bindSliderWithNumber({
-    slider: aimRange,
-    output: document.getElementById("aimOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.aim = v;
-      persist();
-    }
-  });
-
-  resetBtn.addEventListener("click", () => {
-    Object.assign(state, defaults);
-    aRange.value = state.a;
-    bRange.value = state.b;
-    aimRange.value = state.aim;
-    aRange.dispatchEvent(new Event("input", { bubbles: true }));
-    bRange.dispatchEvent(new Event("input", { bubbles: true }));
-    aimRange.dispatchEvent(new Event("input", { bubbles: true }));
-    persist();
-    logger.event("reset.defaults", { ...state });
-  });
-
-  function persist() {
-    writeUrlState({ a: state.a.toFixed(2), b: state.b.toFixed(2), aim: state.aim.toFixed(2) });
-    logger.dbg("state.persist", state);
-  }
-
-  function render() {
-    const rect = canvas.getBoundingClientRect();
-    const ctx = setupHiDPICanvas(canvas);
-    const mapper = worldToScreenFactory(rect.width, rect.height, rect.width / 34);
-
+  },
+  render({ ctx, mapper, rect, state }) {
     clear(ctx, rect.width, rect.height);
     drawGrid(ctx, rect.width, rect.height);
     drawAxes(ctx, mapper, rect.width, rect.height);
@@ -102,6 +56,8 @@
     drawLine(ctx, mapper, { x: -20, y: (b / a) * -20 }, { x: 20, y: (b / a) * 20 }, "#64748b", 1.4, [7, 6]);
 
     const origin = { x: 16, y: state.aim };
+    drawHandle(ctx, mapper, origin, "#facc15");
+    drawPoint(ctx, mapper, origin, "#facc15", 5, "Launch");
     const aimed = normalize(sub(fL, origin));
     const hit = rayHyperbolaIntersection(origin, aimed, a, b);
     if (hit && hit.x > 0) {
@@ -113,28 +69,21 @@
       drawLine(ctx, mapper, hit, add(hit, scale(normalize(sub(fR, hit)), 28)), "rgba(96,165,250,0.45)", 1.4, [6, 6]);
     }
 
-    document.getElementById("info").textContent = `Eccentricity e = ${(Math.sqrt(1 + (b * b) / (a * a))).toFixed(3)} (>1)`;
-
-    requestAnimationFrame(render);
-  }
-
-  mountDebugPanel({
-    target: document.getElementById("debugHost"),
-    namespace: "p5-hyperbola",
-    getState: () => ({ ...state })
-  });
-
-  logger.info("page.init", { ...state });
-
-  logger.smoke([
+    document.getElementById("info").textContent = `Eccentricity e = ${Math.sqrt(1 + (b * b) / (a * a)).toFixed(3)} (>1)`;
+  },
+  smoke: [
     {
       name: "hyperbola eccentricity > 1",
-      run: () => Math.sqrt(1 + (state.b * state.b) / (state.a * state.a)) > 1
+      run: () => Math.sqrt(1 + (defaults.b * defaults.b) / (defaults.a * defaults.a)) > 1
     },
     {
-      name: "focus distance formula",
-      run: () => Math.abs(Math.sqrt(state.a * state.a + state.b * state.b) ** 2 - (state.a * state.a + state.b * state.b)) < 1e-8
+      name: "ray from launch point hits right branch",
+      run: () => {
+        const origin = { x: 16, y: 0.2 };
+        const aimed = normalize(sub({ x: -Math.sqrt(4 * 4 + 2.6 * 2.6), y: 0 }, origin));
+        const hit = rayHyperbolaIntersection(origin, aimed, 4, 2.6);
+        return Boolean(hit && hit.x > 0);
+      }
     }
-  ]);
-
-  requestAnimationFrame(render);
+  ]
+});

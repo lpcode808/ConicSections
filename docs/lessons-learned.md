@@ -1,5 +1,32 @@
 # Lessons Learned
 
+## 2026-06-09: Directrix drawn on the wrong side; smoke checks were not enforced
+
+### What happened
+Module 6 drew the directrix at `x = -l/e`, so the on-screen focus/directrix distance ratio never matched the advertised `e` (e.g. ratio 0.354 vs target 0.700). It shipped that way because the sample point was fixed at one angle and the mismatch read like a plausible number.
+
+### Root cause
+For the polar form `r = l / (1 + e·cosθ)` with the focus at the origin, the matching directrix is at `x = +l/e` (same side as the curve's nearest point). The sign was flipped. Separately, page smoke checks log `CHECK FAIL` via `console.error`, but the Playwright clean-load test only filtered for CORS/module/uncaught strings — a failing math check could not fail CI.
+
+### Fix shipped
+- Corrected the directrix to `x = +l/e` and added a smoke check asserting `d(P,focus)/d(P,directrix) = e` at several sample angles.
+- Made module 6's sample point P draggable along the curve, so the claim is now checkable at every point, not one.
+- Added `CHECK FAIL` and `Smoke test threw` to the Playwright console-error filter, so smoke-check regressions now fail the suite.
+
+### Prevention
+- When a page asserts a numeric invariant, draw or display it live and add a smoke check that computes it independently — direct manipulation surfaces wrong math that static samples hide.
+
+## 2026-06-09: Playwright reused a stale server from another project
+
+### What happened
+The full UX suite failed on every test because an unrelated local server (another project) was already listening on port 4173, and `reuseExistingServer` pointed the tests at it.
+
+### Fix shipped
+- `playwright.config.js` now honors `CONIC_TEST_PORT`, e.g. `CONIC_TEST_PORT=4317 npm run test:ux`.
+
+### Prevention
+- If the whole suite fails at once on locator timeouts, first check what is actually being served on the test port.
+
 ## 2026-05-12: Hardening accessibility and UX regression coverage
 
 ### What happened

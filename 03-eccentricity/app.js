@@ -1,79 +1,52 @@
-  import {
-    sub,
-    add,
-    scale,
-    fociPositions,
-    ellipseNormal,
-    rayEllipseIntersection,
-    reflectVector,
-    normalize
-  } from "../shared/conic-math.js";
-  import {
-    setupHiDPICanvas,
-    worldToScreenFactory,
-    clear,
-    drawGrid,
-    drawAxes,
-    drawEllipse,
-    drawPoint,
-    drawLine
-  } from "../shared/draw-utils.js";
-  import { readUrlState, writeUrlState, bindSliderWithNumber } from "../shared/interaction.js";
-  import { createDebugger, mountDebugPanel } from "../shared/debug.js";
+import {
+  sub,
+  add,
+  scale,
+  fociPositions,
+  ellipseNormal,
+  rayEllipseIntersection,
+  reflectVector,
+  normalize,
+  distance
+} from "../shared/conic-math.js";
+import {
+  clear,
+  drawGrid,
+  drawAxes,
+  drawEllipse,
+  drawPoint,
+  drawLine,
+  drawAngleArc,
+  drawSegmentBar
+} from "../shared/draw-utils.js";
+import { createExplorable } from "../shared/explorable.js";
 
-  const logger = createDebugger("p3-eccentricity");
-  const defaults = { e: 0.3, theta: 0.7, a: 9 };
-  const state = readUrlState(defaults);
+const defaults = { e: 0.3, theta: 0.7, a: 9 };
 
-  const eRange = document.getElementById("eRange");
-  const thetaRange = document.getElementById("thetaRange");
-  const canvas = document.getElementById("scene");
-  const resetBtn = document.getElementById("resetBtn");
-
-  eRange.value = state.e;
-  thetaRange.value = state.theta;
-
-  bindSliderWithNumber({
-    slider: eRange,
-    output: document.getElementById("eOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.e = v;
-      persist();
+createExplorable({
+  id: "p3-eccentricity",
+  moduleId: "03-eccentricity",
+  defaults,
+  url: { e: 2, theta: 3 },
+  view: { unitsWide: 24 },
+  params: [
+    { key: "e", slider: "eRange", output: "eOut" },
+    {
+      key: "theta",
+      slider: "thetaRange",
+      output: "thetaOut",
+      format: (v) => `${((v * 180) / Math.PI).toFixed(1)}deg`
     }
-  });
-
-  bindSliderWithNumber({
-    slider: thetaRange,
-    output: document.getElementById("thetaOut"),
-    precision: 2,
-    format: (v) => `${((v * 180) / Math.PI).toFixed(1)}deg`,
-    onInput: (v) => {
-      state.theta = v;
-      persist();
+  ],
+  drag: {
+    onMove({ world, state }) {
+      const b = state.a * Math.sqrt(Math.max(0.01, 1 - state.e * state.e));
+      const [f1] = fociPositions(state.a, b);
+      const v = sub(world, f1);
+      state.theta = (Math.atan2(v.y, v.x) + Math.PI * 2) % (Math.PI * 2);
     }
-  });
-
-  resetBtn.addEventListener("click", () => {
-    Object.assign(state, defaults);
-    eRange.value = state.e;
-    thetaRange.value = state.theta;
-    eRange.dispatchEvent(new Event("input", { bubbles: true }));
-    thetaRange.dispatchEvent(new Event("input", { bubbles: true }));
-    persist();
-    logger.event("reset.defaults", { ...state });
-  });
-
-  function persist() {
-    writeUrlState({ e: state.e.toFixed(2), theta: state.theta.toFixed(3) });
-    logger.dbg("state.persist", state);
-  }
-
-  function render() {
-    const rect = canvas.getBoundingClientRect();
-    const ctx = setupHiDPICanvas(canvas);
-    const mapper = worldToScreenFactory(rect.width, rect.height, rect.width / 24);
-
+  },
+  render({ ctx, mapper, rect, state }) {
     clear(ctx, rect.width, rect.height);
     drawGrid(ctx, rect.width, rect.height);
     drawAxes(ctx, mapper, rect.width, rect.height);
@@ -98,25 +71,27 @@
       drawLine(ctx, mapper, hit, add(hit, scale(out, 40)), "#facc15", 2.5);
       drawLine(ctx, mapper, hit, add(hit, scale(normalize(sub(f2, hit)), 40)), "rgba(96,165,250,0.45)", 1.5, [6, 6]);
       drawLine(ctx, mapper, add(hit, scale({ x: -n.y, y: n.x }, -4)), add(hit, scale({ x: -n.y, y: n.x }, 4)), "#a1a1aa", 2, [6, 6]);
+      drawAngleArc(ctx, mapper, hit, scale(dir, -1), n, 1.5, "#4ade80");
+      drawAngleArc(ctx, mapper, hit, n, out, 1.5, "#4ade80");
 
-      const total = Math.hypot(hit.x - f1.x, hit.y - f1.y) + Math.hypot(hit.x - f2.x, hit.y - f2.y);
-      document.getElementById("paths").textContent = `F1->P->F2 path: ${total.toFixed(3)} vs 2a=${(2 * a).toFixed(3)}`;
+      const d1 = distance(hit, f1);
+      const d2 = distance(hit, f2);
+      drawSegmentBar(
+        ctx,
+        { x: 16, y: rect.height - 26, width: rect.width - 32 },
+        [
+          { value: d1, color: "#fb923c", label: "F1→P" },
+          { value: d2, color: "#60a5fa", label: "P→F2" }
+        ],
+        { max: 2 * a, title: "d1 + d2 = 2a holds at every eccentricity" }
+      );
+
+      document.getElementById("paths").textContent = `F1->P->F2 path: ${(d1 + d2).toFixed(3)} vs 2a=${(2 * a).toFixed(3)}`;
     }
 
     document.getElementById("dims").textContent = `a=${a.toFixed(2)}, b=${b.toFixed(2)}, c=${c.toFixed(2)}, e=${state.e.toFixed(2)}`;
-
-    requestAnimationFrame(render);
-  }
-
-  mountDebugPanel({
-    target: document.getElementById("debugHost"),
-    namespace: "p3-eccentricity",
-    getState: () => ({ ...state })
-  });
-
-  logger.info("page.init", { ...state });
-
-  logger.smoke([
+  },
+  smoke: [
     {
       name: "e=0 produces circle (b=a)",
       run: () => {
@@ -135,6 +110,5 @@
         return b < 2;
       }
     }
-  ]);
-
-  requestAnimationFrame(render);
+  ]
+});

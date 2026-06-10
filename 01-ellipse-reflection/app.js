@@ -1,251 +1,92 @@
-  import {
-    clamp,
-    add,
-    scale,
-    sub,
-    normalize,
-    ellipseNormal,
-    rayEllipseIntersection,
-    reflectVector,
-    fociPositions,
-    angleBetween
-  } from "../shared/conic-math.js";
-  import {
-    setupHiDPICanvas,
-    worldToScreenFactory,
-    clear,
-    drawGrid,
-    drawAxes,
-    drawEllipse,
-    drawPoint,
-    drawLine
-  } from "../shared/draw-utils.js";
-  import { makeDraggable, readUrlState, writeUrlState, bindSliderWithNumber } from "../shared/interaction.js";
-  import { createDebugger, mountDebugPanel } from "../shared/debug.js";
+import {
+  clamp,
+  add,
+  scale,
+  sub,
+  normalize,
+  ellipseNormal,
+  rayEllipseIntersection,
+  reflectVector,
+  fociPositions,
+  angleBetween,
+  distance
+} from "../shared/conic-math.js";
+import {
+  clear,
+  drawGrid,
+  drawAxes,
+  drawEllipse,
+  drawPoint,
+  drawLine,
+  drawAngleArc,
+  drawSegmentBar
+} from "../shared/draw-utils.js";
+import { createExplorable } from "../shared/explorable.js";
 
-  const logger = createDebugger("p1-ellipse");
-  const defaults = {
-    a: 9,
-    e: 0.62,
-    theta: 0.52,
-    burst: 24,
-    pool: false,
-    present: false
-  };
-  const state = readUrlState(defaults);
+const defaults = {
+  a: 9,
+  e: 0.62,
+  theta: 0.52,
+  burst: 24,
+  pool: false,
+  present: false
+};
 
-  const canvas = document.getElementById("scene");
-  const aRange = document.getElementById("aRange");
-  const eRange = document.getElementById("eRange");
-  const angleRange = document.getElementById("angleRange");
-  const burstCount = document.getElementById("burstCount");
-  const presentBtn = document.getElementById("presentBtn");
-  const poolPresetBtn = document.getElementById("poolPresetBtn");
-  const burstBtn = document.getElementById("burstBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const kpiDistance = document.getElementById("kpiDistance");
-  const kpiAngles = document.getElementById("kpiAngles");
+const explainCard = document.getElementById("explainCard");
+const presentBtn = document.getElementById("presentBtn");
+const kpiDistance = document.getElementById("kpiDistance");
+const kpiAngles = document.getElementById("kpiAngles");
 
-  aRange.value = state.a;
-  eRange.value = state.e;
-  angleRange.value = state.theta;
-  burstCount.value = state.burst;
+let burstActive = false;
+let burstT = 0;
 
-  let burstActive = false;
-  let burstT = 0;
-  let lastFrame = performance.now();
+function singlePath(theta, a, b) {
+  const [f1, f2] = fociPositions(a, b);
+  const startDir = { x: Math.cos(theta), y: Math.sin(theta) };
+  const hit = rayEllipseIntersection(f1, startDir, a, b);
+  if (!hit) return null;
+  const normal = ellipseNormal(a, b, hit.x, hit.y);
+  const outDir = reflectVector(startDir, normal);
+  const towardF2 = normalize(sub(f2, hit));
+  const iA = (angleBetween(scale(startDir, -1), normal) * 180) / Math.PI;
+  const rA = (angleBetween(outDir, normal) * 180) / Math.PI;
+  return { f1, f2, hit, normal, startDir, outDir, towardF2, iA, rA };
+}
 
-  const angleSync = bindSliderWithNumber({
-    slider: angleRange,
-    output: document.getElementById("angleOut"),
-    precision: 2,
-    format: (v) => `${((v * 180) / Math.PI).toFixed(1)}deg`,
-    onInput: (v) => {
-      state.theta = v;
-      persist();
-    }
-  });
-
-  bindSliderWithNumber({
-    slider: aRange,
-    output: document.getElementById("aOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.a = v;
-      persist();
-    }
-  });
-
-  bindSliderWithNumber({
-    slider: eRange,
-    output: document.getElementById("eOut"),
-    precision: 2,
-    onInput: (v) => {
-      state.e = v;
-      persist();
-    }
-  });
-
-  bindSliderWithNumber({
-    slider: burstCount,
-    output: document.getElementById("burstOut"),
-    precision: 0,
-    onInput: (v) => {
-      state.burst = Math.round(v);
-      persist();
-    }
-  });
-
-  presentBtn.addEventListener("click", () => {
-    state.present = !state.present;
-    document.getElementById("explainCard").style.display = state.present ? "none" : "block";
-    presentBtn.setAttribute("aria-pressed", String(state.present));
-    persist();
-    logger.event("present.toggle", { present: state.present });
-  });
-
-  poolPresetBtn.addEventListener("click", () => {
-    state.a = 9.5;
-    state.e = 0.68;
-    state.theta = 0.45;
-    state.burst = 36;
-    state.pool = true;
-    aRange.value = state.a;
-    eRange.value = state.e;
-    angleRange.value = state.theta;
-    burstCount.value = state.burst;
-    aRange.dispatchEvent(new Event("input", { bubbles: true }));
-    eRange.dispatchEvent(new Event("input", { bubbles: true }));
-    angleRange.dispatchEvent(new Event("input", { bubbles: true }));
-    burstCount.dispatchEvent(new Event("input", { bubbles: true }));
-    burstActive = true;
-    burstT = 0;
-    logger.event("pool.preset.apply", { ...state });
-  });
-
-  burstBtn.addEventListener("click", () => {
-    burstActive = true;
-    burstT = 0;
-    logger.event("burst.start", { rays: state.burst });
-  });
-
-  resetBtn.addEventListener("click", () => {
-    Object.assign(state, defaults);
-    aRange.value = state.a;
-    eRange.value = state.e;
-    angleRange.value = state.theta;
-    burstCount.value = state.burst;
-    aRange.dispatchEvent(new Event("input", { bubbles: true }));
-    eRange.dispatchEvent(new Event("input", { bubbles: true }));
-    angleRange.dispatchEvent(new Event("input", { bubbles: true }));
-    burstCount.dispatchEvent(new Event("input", { bubbles: true }));
-    document.getElementById("explainCard").style.display = "block";
-    presentBtn.setAttribute("aria-pressed", "false");
-    persist();
-    logger.event("reset.defaults", { ...state });
-  });
-
-  makeDraggable({
-    element: canvas,
-    hitTest: () => true,
-    onMove(pos) {
-      const rect = canvas.getBoundingClientRect();
-      const mapper = worldToScreenFactory(rect.width, rect.height, rect.width / 24);
-      const world = mapper.toWorld(pos);
+const { state, logger, setValues } = createExplorable({
+  id: "p1-ellipse",
+  moduleId: "01-ellipse-reflection",
+  defaults,
+  url: { a: 2, e: 2, theta: 3, burst: 0, pool: "flag", present: "flag" },
+  view: { unitsWide: 24 },
+  params: [
+    { key: "a", slider: "aRange", output: "aOut" },
+    { key: "e", slider: "eRange", output: "eOut" },
+    {
+      key: "theta",
+      slider: "angleRange",
+      output: "angleOut",
+      format: (v) => `${((v * 180) / Math.PI).toFixed(1)}deg`
+    },
+    { key: "burst", slider: "burstCount", output: "burstOut", precision: 0 }
+  ],
+  drag: {
+    onMove({ world, state }) {
       const b = state.a * Math.sqrt(1 - state.e * state.e);
       const [f1] = fociPositions(state.a, b);
       const v = sub(world, f1);
-      state.theta = Math.atan2(v.y, v.x);
-      angleRange.value = state.theta;
-      angleSync();
+      const theta = Math.atan2(v.y, v.x);
+      state.theta = (theta + Math.PI * 2) % (Math.PI * 2);
     }
-  });
-
-  function persist() {
-    writeUrlState({
-      a: state.a.toFixed(2),
-      e: state.e.toFixed(2),
-      theta: state.theta.toFixed(3),
-      burst: state.burst,
-      pool: state.pool ? 1 : 0,
-      present: state.present ? 1 : 0
-    });
-    logger.dbg("state.persist", state);
-  }
-
-  function drawPoolTable(ctx, mapper, a, b, f1, f2) {
-    const steps = 300;
-    ctx.fillStyle = "#4f301f";
-    ctx.beginPath();
-    for (let i = 0; i <= steps; i += 1) {
-      const t = (i / steps) * Math.PI * 2;
-      const p = mapper.toScreen({ x: (a + 0.55) * Math.cos(t), y: (b + 0.55) * Math.sin(t) });
-      if (i === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-    }
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = "#1e6c4a";
-    ctx.beginPath();
-    for (let i = 0; i <= steps; i += 1) {
-      const t = (i / steps) * Math.PI * 2;
-      const p = mapper.toScreen({ x: a * Math.cos(t), y: b * Math.sin(t) });
-      if (i === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-    }
-    ctx.closePath();
-    ctx.fill();
-
-    const f1s = mapper.toScreen(f1);
-    const f2s = mapper.toScreen(f2);
-
-    ctx.fillStyle = "#111827";
-    ctx.beginPath();
-    ctx.arc(f2s.x, f2s.y, 9, 0, Math.PI * 2);
-    ctx.fill();
-
-    for (let i = 0; i < 8; i += 1) {
-      const a0 = (i / 8) * Math.PI * 2;
-      const p1 = { x: f1s.x + Math.cos(a0) * 4, y: f1s.y + Math.sin(a0) * 4 };
-      const p2 = { x: f1s.x + Math.cos(a0) * 10, y: f1s.y + Math.sin(a0) * 10 };
-      ctx.strokeStyle = "#fcd34d";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-    }
-    ctx.fillStyle = "#fcd34d";
-    ctx.beginPath();
-    ctx.arc(f1s.x, f1s.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function singlePath(theta, a, b) {
-    const [f1, f2] = fociPositions(a, b);
-    const startDir = { x: Math.cos(theta), y: Math.sin(theta) };
-    const hit = rayEllipseIntersection(f1, startDir, a, b);
-    if (!hit) return null;
-    const normal = ellipseNormal(a, b, hit.x, hit.y);
-    const outDir = reflectVector(startDir, normal);
-    const towardF2 = normalize(sub(f2, hit));
-    const iA = (angleBetween(scale(startDir, -1), normal) * 180) / Math.PI;
-    const rA = (angleBetween(outDir, normal) * 180) / Math.PI;
-    return { f1, f2, hit, normal, startDir, outDir, towardF2, iA, rA };
-  }
-
-  function drawFrame(ts) {
-    const rect = canvas.getBoundingClientRect();
-    const ctx = setupHiDPICanvas(canvas);
-    const mapper = worldToScreenFactory(rect.width, rect.height, rect.width / 24);
-    const dt = Math.min(0.05, (ts - lastFrame) / 1000);
-    lastFrame = ts;
-
-    clear(ctx, rect.width, rect.height);
-    if (state.pool) {
-      clear(ctx, rect.width, rect.height, "#0f172a");
-    } else {
+  },
+  onReset() {
+    explainCard.style.display = "block";
+    presentBtn.setAttribute("aria-pressed", "false");
+  },
+  getDebugState: () => ({ ...state, burstActive }),
+  render({ ctx, mapper, rect, state, dt }) {
+    clear(ctx, rect.width, rect.height, state.pool ? "#0f172a" : "#0b1221");
+    if (!state.pool) {
       drawGrid(ctx, rect.width, rect.height);
       drawAxes(ctx, mapper, rect.width, rect.height);
     }
@@ -274,10 +115,24 @@
       if (!state.pool) {
         const tangent = { x: -path.normal.y, y: path.normal.x };
         drawLine(ctx, mapper, add(path.hit, scale(tangent, -4)), add(path.hit, scale(tangent, 4)), "#a1a1aa", 2, [6, 6]);
+        // Equal angles on either side of the normal, drawn rather than asserted.
+        drawAngleArc(ctx, mapper, path.hit, scale(path.startDir, -1), path.normal, 1.5, "#4ade80");
+        drawAngleArc(ctx, mapper, path.hit, path.normal, path.outDir, 1.5, "#4ade80");
       }
 
-      const total = Math.hypot(path.hit.x - path.f1.x, path.hit.y - path.f1.y) + Math.hypot(path.hit.x - path.f2.x, path.hit.y - path.f2.y);
-      kpiDistance.textContent = `Path length F1->P->F2: ${total.toFixed(3)} (should be close to 2a = ${(2 * a).toFixed(3)})`;
+      const d1 = distance(path.hit, path.f1);
+      const d2 = distance(path.hit, path.f2);
+      drawSegmentBar(
+        ctx,
+        { x: 16, y: rect.height - 26, width: rect.width - 32 },
+        [
+          { value: d1, color: "#fb923c", label: "F1→P" },
+          { value: d2, color: "#60a5fa", label: "P→F2" }
+        ],
+        { max: 2 * a, title: "The two ray segments always fill the same bar: d1 + d2 = 2a" }
+      );
+
+      kpiDistance.textContent = `Path length F1->P->F2: ${(d1 + d2).toFixed(3)} (should be close to 2a = ${(2 * a).toFixed(3)})`;
       kpiAngles.textContent = `Incident angle: ${path.iA.toFixed(2)}deg | Reflected angle: ${path.rA.toFixed(2)}deg`;
     }
 
@@ -285,7 +140,6 @@
       burstT += dt;
       const count = state.burst;
       const progress = clamp(burstT / 1.2, 0, 1);
-      const [f1] = fociPositions(a, b);
       for (let i = 0; i < count; i += 1) {
         const theta = (i / count) * Math.PI * 2;
         const p = singlePath(theta, a, b);
@@ -300,24 +154,8 @@
       }
       if (progress >= 1) burstActive = false;
     }
-
-    requestAnimationFrame(drawFrame);
-  }
-
-  if (state.present) {
-    document.getElementById("explainCard").style.display = "none";
-  }
-  presentBtn.setAttribute("aria-pressed", String(state.present));
-
-  logger.info("page.init", { ...state });
-
-  mountDebugPanel({
-    target: document.getElementById("debugHost"),
-    namespace: "p1-ellipse",
-    getState: () => ({ ...state, burstActive })
-  });
-
-  logger.smoke([
+  },
+  smoke: [
     {
       name: "ellipse reflection intersection exists",
       run: () => {
@@ -346,6 +184,79 @@
         return true;
       }
     }
-  ]);
+  ]
+});
 
-  requestAnimationFrame(drawFrame);
+function drawPoolTable(ctx, mapper, a, b, f1, f2) {
+  const steps = 300;
+  ctx.fillStyle = "#4f301f";
+  ctx.beginPath();
+  for (let i = 0; i <= steps; i += 1) {
+    const t = (i / steps) * Math.PI * 2;
+    const p = mapper.toScreen({ x: (a + 0.55) * Math.cos(t), y: (b + 0.55) * Math.sin(t) });
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#1e6c4a";
+  ctx.beginPath();
+  for (let i = 0; i <= steps; i += 1) {
+    const t = (i / steps) * Math.PI * 2;
+    const p = mapper.toScreen({ x: a * Math.cos(t), y: b * Math.sin(t) });
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  const f1s = mapper.toScreen(f1);
+  const f2s = mapper.toScreen(f2);
+
+  ctx.fillStyle = "#111827";
+  ctx.beginPath();
+  ctx.arc(f2s.x, f2s.y, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (let i = 0; i < 8; i += 1) {
+    const a0 = (i / 8) * Math.PI * 2;
+    const p1 = { x: f1s.x + Math.cos(a0) * 4, y: f1s.y + Math.sin(a0) * 4 };
+    const p2 = { x: f1s.x + Math.cos(a0) * 10, y: f1s.y + Math.sin(a0) * 10 };
+    ctx.strokeStyle = "#fcd34d";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#fcd34d";
+  ctx.beginPath();
+  ctx.arc(f1s.x, f1s.y, 4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+presentBtn.addEventListener("click", () => {
+  setValues({ present: !state.present });
+  explainCard.style.display = state.present ? "none" : "block";
+  presentBtn.setAttribute("aria-pressed", String(state.present));
+  logger.event("present.toggle", { present: state.present });
+});
+
+document.getElementById("poolPresetBtn").addEventListener("click", () => {
+  setValues({ a: 9.5, e: 0.68, theta: 0.45, burst: 36, pool: true });
+  burstActive = true;
+  burstT = 0;
+  logger.event("pool.preset.apply", { ...state });
+});
+
+document.getElementById("burstBtn").addEventListener("click", () => {
+  burstActive = true;
+  burstT = 0;
+  logger.event("burst.start", { rays: state.burst });
+});
+
+if (state.present) {
+  explainCard.style.display = "none";
+}
+presentBtn.setAttribute("aria-pressed", String(state.present));

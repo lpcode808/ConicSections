@@ -445,9 +445,8 @@ table.inline-math th {
   font-size: 0.85rem;
   color: var(--muted);
   font-style: italic;
-  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, var(--line));
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-radius: 6px;
 }
 
 .look-for {

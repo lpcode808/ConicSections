@@ -53,8 +53,10 @@ The project also includes a `file://` guard. If someone opens a page directly fr
 ### Structure
 
 - `index.html` landing page
+- `shared/explorable.js` page runtime (declarative controls, URL state, drag, render loop)
+- `shared/modules.js` module manifest — single source for the sequence and progress strips
 - `shared/conic-math.js` math + geometry logic
-- `shared/draw-utils.js` canvas helpers
+- `shared/draw-utils.js` canvas helpers (drag handles, invariant bars, angle arcs)
 - `shared/interaction.js` pointer + URL state helpers
 - `shared/debug.js` smoke checks + persistent telemetry
 - `shared/bootstrap.js` file protocol guard + app module loader
@@ -64,6 +66,10 @@ The project also includes a `file://` guard. If someone opens a page directly fr
 - `04-parabola-reflection/index.html` + `04-parabola-reflection/app.js`
 - `05-hyperbola-reflection/index.html` + `05-hyperbola-reflection/app.js`
 - `06-conic-family/index.html` + `06-conic-family/app.js`
+
+The runtime in `shared/explorable.js` is concept-agnostic: a new module (including non-conic math topics) is a manifest entry, an HTML page, and an `app.js` that declares state, controls, a drag gesture, and a render function. See "Adding a new module" in `AGENTS.md`.
+
+Every module supports direct manipulation on the diagram itself — drag the laser, the foci, the pencil point, the focus of the dish, the launch point, or the sample point P — with sliders as the keyboard-accessible equivalent. Core invariants are drawn live (the d1 + d2 = 2a "string" bar, equal reflection angles, the focus/directrix ratio bars), not just stated.
 
 ### Logging + Debugging
 

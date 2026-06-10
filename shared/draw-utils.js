@@ -154,13 +154,67 @@ export function drawHyperbola(ctx, mapper, a, b, tMax = 2.4, color = "#f97316", 
   drawBranch(-1);
 }
 
-export function drawAngleArc(ctx, mapper, center, v1, v2, radius = 0.8, color = "#4ade80") {
+export function drawAngleArc(ctx, mapper, center, v1, v2, radius = 0.8, color = "#4ade80", width = 2) {
   const c = mapper.toScreen(center);
+  const pxPerUnit = mapper.toScreen({ x: 1, y: 0 }).x - mapper.toScreen({ x: 0, y: 0 }).x;
   const a1 = Math.atan2(-v1.y, v1.x);
   const a2 = Math.atan2(-v2.y, v2.x);
+  // Always sweep the minor arc between the two directions.
+  let diff = a2 - a1;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = width;
   ctx.beginPath();
-  ctx.arc(c.x, c.y, radius * mapper.toScreen({ x: 1, y: 0 }).x - mapper.toScreen({ x: 0, y: 0 }).x, a1, a2, false);
+  ctx.arc(c.x, c.y, radius * pxPerUnit, a1, a1 + diff, diff < 0);
   ctx.stroke();
+}
+
+// Dashed ring marking a point as draggable.
+export function drawHandle(ctx, mapper, p, color = "#facc15", radiusPx = 11) {
+  const sp = mapper.toScreen(p);
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3, 4]);
+  ctx.beginPath();
+  ctx.arc(sp.x, sp.y, radiusPx, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Screen-space stacked bar that makes an invariant visible: segments fill a
+// track scaled to `max`, so a constant sum keeps the bar exactly full while
+// the divider between segments slides.
+export function drawSegmentBar(ctx, { x, y, width, height = 12 }, segments, { max, title } = {}) {
+  const total = segments.reduce((acc, s) => acc + s.value, 0);
+  const scaleMax = max ?? total;
+  ctx.save();
+  ctx.font = "12px ui-sans-serif, system-ui";
+
+  if (title) {
+    ctx.fillStyle = "rgba(226,232,240,0.85)";
+    ctx.fillText(title, x, y - 6);
+  }
+
+  ctx.fillStyle = "rgba(148,163,184,0.22)";
+  ctx.fillRect(x, y, width, height);
+
+  let cursor = x;
+  for (const seg of segments) {
+    const w = Math.max(0, (seg.value / scaleMax) * width);
+    ctx.fillStyle = seg.color;
+    ctx.fillRect(cursor, y, w, height);
+    const text = seg.label ? `${seg.label} = ${seg.value.toFixed(2)}` : seg.value.toFixed(2);
+    if (w > ctx.measureText(text).width + 12) {
+      ctx.fillStyle = "rgba(15,23,42,0.92)";
+      ctx.fillText(text, cursor + 6, y + height - 2);
+    }
+    cursor += w;
+  }
+
+  ctx.strokeStyle = "rgba(226,232,240,0.6)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, width, height);
+  ctx.restore();
 }
