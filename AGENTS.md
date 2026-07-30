@@ -142,3 +142,30 @@ Must-pass categories:
 3. Keep `README.md`, `AGENTS.md`, and lesson notes aligned.
 4. Add at least one lesson entry for incidents/regressions.
 5. Verify logging/telemetry still works after UI changes.
+
+## Questions for Justin — `ASK.md`
+
+<!-- ask-convention:v1 · propagated by ~/Coding/_scripts/propagate-ask-convention.sh.
+     Edit the script, not this block — a re-run won't overwrite local edits, it just skips. -->
+
+When you hit a decision that is genuinely Justin's to make, and you can't resolve it from this repo,
+the request, or a sensible default: append it to `ASK.md` at this repo's root (create the file if it
+doesn't exist), then keep going on everything that doesn't depend on the answer.
+
+    - [ ] YYYY-MM-DD · **The question, one sentence, in bold.**
+          Context: why it came up. One or two lines.
+          Options: (a) the one you'd pick and why (b) the real alternative
+          Blocks: what's stalled — or "nothing, I proceeded with (a)"
+          Asked-by: <harness>
+
+Append at the bottom. Never delete, reorder, or check your own box. Always draft the options — a
+question with no options is homework; a question with two named options and a recommendation is a
+fifteen-second decision.
+
+Justin's laptop sweeps every repo's `ASK.md` on a schedule and he answers them in one sitting. The
+answer comes back into this same file as a checked item with an `**Answer (date):**` line, so a
+later session reads it as settled rather than re-asking.
+
+Ask sparingly — one or two real asks per session is a lot. Routine judgment calls, file moves,
+cleanups, and merge conflicts are inside the assignment, not asks. If you could proceed under an
+assumption, proceed under it and say which one you took.
